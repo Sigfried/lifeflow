@@ -11,5 +11,5 @@ Uses:
   - [nvd3.js](https://github.com/novus/nvd3.git)
   - [jquery-contextMenu](https://github.com/arnklint/jquery-contextMenu.git)
 
-Planning to create simplified version without all these dependencies.
+Planning to create simplified version without so many dependencies.
 
