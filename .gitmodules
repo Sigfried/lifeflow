@@ -1,0 +1,12 @@
+[submodule "d3"]
+	path = d3
+	url = https://github.com/mbostock/d3.git
+[submodule "underscore"]
+	path = underscore
+	url = https://github.com/jashkenas/underscore.git
+[submodule "nvd3"]
+	path = nvd3
+	url = https://github.com/novus/nvd3.git
+[submodule "jquery-contextMenu"]
+	path = jquery-contextMenu
+	url = https://github.com/arnklint/jquery-contextMenu.git
