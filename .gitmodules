@@ -10,3 +10,6 @@
 [submodule "jquery-contextMenu"]
 	path = jquery-contextMenu
 	url = https://github.com/arnklint/jquery-contextMenu.git
+[submodule "enlightened-data"]
+	path = enlightened-data
+	url = git@github.com:Sigfried/enlightened-data.git
