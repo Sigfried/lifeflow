@@ -6,7 +6,7 @@
 	url = https://github.com/jashkenas/underscore.git
 [submodule "nvd3"]
 	path = nvd3
-	url = https://github.com/novus/nvd3.git
+	url = ./nvd3
 [submodule "jquery-contextMenu"]
 	path = jquery-contextMenu
 	url = https://github.com/arnklint/jquery-contextMenu.git
