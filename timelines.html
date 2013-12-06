@@ -1,0 +1,93 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="en-US" >
+</head>
+<body>
+    <style>
+       .axis {
+            shape-rendering: crispEdges;
+        }
+        .x.axis line {
+            stroke: #ccc;
+        }
+        .x.axis .minor {
+            stroke-opacity: .5;
+        }
+        .x.axis path {
+            display: none;
+        }
+/*
+        .bar {
+            fill: steelblue;
+        }
+*/
+        text {
+            color: black;
+        }
+    </style>
+    <link href="./nvd3/src/nv.d3.css" rel="stylesheet" type="text/css">
+    <style>
+        svg { height: auto; }
+    </style>
+
+
+    <script type="text/javascript" src="./d3/d3.js"></script>
+    <script type="text/javascript" src="/js/underscore.js"></script>
+    <script type="text/javascript" src="/js/jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="./enlightened-data/enlightened-data.js"></script>
+    <script type="text/javascript" src="./nvd3/nv.d3.js"></script>
+    <script src="./nvd3/src/tooltip.js"></script>
+    <script src="./nvd3/src/utils.js"></script>
+    <script src="./nvd3/src/models/legend.js"></script>
+    <script src="./nvd3/src/models/axis.js"></script>
+    <script src="./evtData.js"></script>
+    <script src="./timelines.js"></script>
+    <script src="./lifeflow.js"></script>
+    <script src="./timelinesChart.js"></script>
+
+    <script>
+
+    (function($){
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+        $.getParameterByName = getParameterByName;
+    })(jQuery);
+
+    $(document).ready(function() {
+        d3.csv('./weblog.csv', function (data) {
+
+            //if (!$.getParameterByName("fullData")) data = data.slice(2000,2500);
+
+
+
+            var container = d3.select('body')
+                                .append('div')
+                                ;
+            var timelinesChart = nv.models.timelinesChart()
+                    .entityIdProp('ip')
+                    .eventNameProp('page')
+                    .startDateProp('date')
+                    .unitProp(100)
+                    .height($(window).height() - 150)
+                    .width($(window).width() - 150)
+                    /*
+                    .eventOrder(['In Development','Pending','Open','Enrolling',
+                        'Closed to Accrual', 'Closed to Follow Up','POS/PAC','Concluded',
+                        'On Hold','Deferred','Withdrawn',
+                        'Temporarily Closed','FDA - IND Hold','Other' ])
+                    */
+                                ;
+            container
+                    .datum(data)
+                    .call(timelinesChart);
+        });
+    });
+    </script>
+</body>
+</html>
