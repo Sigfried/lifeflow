@@ -10,6 +10,7 @@ Uses:
   - [Underscore.js](http://underscorejs.org/)
   - [nvd3.js](https://github.com/novus/nvd3.git)
   - [jquery-contextMenu](https://github.com/arnklint/jquery-contextMenu.git)
+  - jQuery
 
 Planning to create simplified version without so many dependencies.
 
@@ -17,3 +18,7 @@ After cloning, remember to run
 
     git submodule init
     git submodule update
+
+[LifeFlow demo](http://sigfried.org/lifeflow/lifeflow.html)
+
+[Timelines demo](http://sigfried.org/lifeflow/timelines.html)
