@@ -34,8 +34,8 @@
 
 
     <script type="text/javascript" src="./d3/d3.js"></script>
-    <script type="text/javascript" src="/js/underscore.js"></script>
-    <script type="text/javascript" src="/js/jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="./underscore//underscore.js"></script>
+    <script type="text/javascript" src="./jquery-1.9.1.js"></script>
     <script type="text/javascript" src="./enlightened-data/enlightened-data.js"></script>
     <script type="text/javascript" src="./nvd3/nv.d3.js"></script>
     <script src="./nvd3/src/tooltip.js"></script>
@@ -61,7 +61,7 @@
     })(jQuery);
 
     $(document).ready(function() {
-        d3.csv('./weblog.csv', function (data) {
+        d3.csv('./sampleData/huricane.csv', function (data) {
 
             //if (!$.getParameterByName("fullData")) data = data.slice(2000,2500);
 
@@ -71,8 +71,8 @@
                                 .append('div')
                                 ;
             var timelinesChart = nv.models.timelinesChart()
-                    .entityIdProp('ip')
-                    .eventNameProp('page')
+                    .entityIdProp('hur_id')
+                    .eventNameProp('status')
                     .startDateProp('date')
                     .unitProp(100)
                     .height($(window).height() - 150)
