@@ -13,3 +13,7 @@ Uses:
 
 Planning to create simplified version without so many dependencies.
 
+After cloning, remember to run
+
+    git submodule init
+    git submodule update
