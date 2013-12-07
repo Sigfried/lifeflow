@@ -18,6 +18,7 @@ nv.models.lifeflow = function () {
         eventNames = null,
         eventOrder = [],
         unitProp,
+        timeUnit,
         alignChoices,
         startDateProp = null,
         endDateField = null,
@@ -359,7 +360,7 @@ return;
                 var avgDays = d3.mean(_(d.records).invoke('fromPrev'));
 
                 var tt = path + ', ' + d.records.length + ' timelines';
-                tt += ', mean days: ' + avgDays;
+                tt += ', mean ' + timeUnit + ': ' + avgDays;
                 dispatch.elementMouseover({
                     value: d,
                     text: tt,
@@ -462,7 +463,7 @@ return;
                             value: d,
                             text: d.timeline() + ': ' + d.eventName() + 
                                 ' - ' + d.toNext() + ' of ' +
-                                d.timeline().duration() + ' total days',
+                                d.timeline().duration() + ' total ' + timeUnit,
                             series: _(d.timeline().records).map(function(rec) {
                                 return {
                                     key: rec.eventName(),
@@ -703,6 +704,15 @@ return;
     chart.unitProp = function(_) {
         if (!arguments.length) return unitProp;
         unitProp = _;
+        timeUnit = 'units';
+        if (unitProp === 1) timeUnit = 'miliseconds';
+        if (unitProp === 1000) timeUnit = 'seconds';
+        if (unitProp === 1000*60) timeUnit = 'minutes';
+        if (unitProp === 1000*60*60) timeUnit = 'hours';
+        if (unitProp === 1000*60*60*24) timeUnit = 'days';
+        if (unitProp === 1000*60*60*24*7) timeUnit = 'weeks';
+        if (unitProp === 1000*60*60*24*365.25) timeUnit = 'years';
+        if (unitProp === 1000*60*60*24*365.25/12) timeUnit = 'months';
         return chart;
     };
 

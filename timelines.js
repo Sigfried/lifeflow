@@ -19,6 +19,7 @@ nv.models.timelines = function () {
         , alignChoices
         , startDateProp = null
         , unitProp
+        , timeUnit
         , defaultDuration = null
         , sortParam
         , width = 960
@@ -139,7 +140,7 @@ nv.models.timelines = function () {
                         var fmt = d3.time.format('%Y-%m-%d');
                         dispatch.elementMouseover({
                             value: tl,
-                            text: tl.toString() + ' - ' + tl.duration() + ' days ' +
+                            text: tl.toString() + ' - ' + tl.duration() + ' ' + timeUnit + ' ' +
                                     lfNodeOfEvt(evt).namePath() + ' ' +
                                     lfNodeOfEvt(evt).y + ':' +
                                     lfNodeOfEvt(evt).dy,
@@ -404,11 +405,11 @@ nv.models.timelines = function () {
                     var fmt = d3.time.format('%Y-%m-%d');
                     dispatch.elementMouseover({
                         value: d,
-                        text: d.toString() + ' - ' + d.duration() + ' days',
+                        text: d.toString() + ' - ' + d.duration() + ' ' + timeUnit,
                         series: _(d.records).map(function(rec) {
                             return {
                                 key: rec.eventName(),
-                                value: (rec.toNext()||0) + ' days' + ' ' +
+                                value: (rec.toNext()||0) + ' ' + timeUnit + ' ' +
                                         fmt(rec.startDate()) ,
                                 color: color(rec.eventName())
                             }
@@ -706,9 +707,18 @@ nv.models.timelines = function () {
         timelineData = _;
         return chart;
     };
-    chart.unitProp = function (_) {
+    chart.unitProp = function(_) {
         if (!arguments.length) return unitProp;
         unitProp = _;
+        timeUnit = 'units';
+        if (unitProp === 1) timeUnit = 'miliseconds';
+        if (unitProp === 1000) timeUnit = 'seconds';
+        if (unitProp === 1000*60) timeUnit = 'minutes';
+        if (unitProp === 1000*60*60) timeUnit = 'hours';
+        if (unitProp === 1000*60*60*24) timeUnit = 'days';
+        if (unitProp === 1000*60*60*24*7) timeUnit = 'weeks';
+        if (unitProp === 1000*60*60*24*365.25) timeUnit = 'years';
+        if (unitProp === 1000*60*60*24*365.25/12) timeUnit = 'months';
         return chart;
     };
     chart.sort = function (_) {
