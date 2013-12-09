@@ -24,7 +24,7 @@ var lifeflow = function () {
         endDateField = null,
         defaultDuration = null,
         alignmentLineWidth = 28,
-        eventNodeWidth = 50,
+        eventNodeWidth = 5,
         endNodeWidth = 0,
         width = 960,
         height = 500,
@@ -63,24 +63,20 @@ var lifeflow = function () {
             var container = d3.select(this);
             var nodes = container.selectAll('g.event-node')
                 .data(lifeflowNodes
-                    //_(lifeflowNodes).filter(function (d) { return d.dx !== 0 })
                     , function (d) {
-                        //return _.uniqueId('nodups')
-                        //console.log(d.namePath() + (d.dx > 0));
                         var id = chart.alignBy() + d.namePath({noRoot:false}) + d.backwards
-                        //if (d.joinId && d.joinId !== id) throw new Error('weird!')
                         d.joinId = id;
                         return id;
                         // paths can be the same on either
-                        // side of an alignment, so include dx
+                        // side of an alignment, so include backwards flag
                     })
-            //nodes.exit().selectAll('rect').attr('stroke','red');
-            //y.domain([0, timelineData.length]);
             y.domain([0, _(lifeflowNodes).reduce(
                 function(memo,node){
                     return Math.max(memo, node.y + node.dy)
                 },0)]);
 
+            enterNodes();
+            return
             var updateInterval = 10; // miliseconds/jump
             var xExtent = x.range()[1] - x.range()[0];
             var exitTime = nodes.exit().size() ? 1000 : 0;
@@ -96,7 +92,6 @@ var lifeflow = function () {
                 if (jumpNum++ >= jumps) {
                     clearInterval(timerId);
                     doneSliding = true;
-                    enterNodes();
                     nodes.each(function(d) {
                         d.domNode = this;
                     })
@@ -172,7 +167,7 @@ var lifeflow = function () {
                         .attr('fill', function (d) {
                             return color(d.valueOf())
                         })
-                        .attr('width', 0)
+                        .attr('width', relativeX(eventNodeWidth))
                     .on("mouseover", rectMouseover)
                     .on("mouseout", rectMouseout)
                         // transform to actual width!!!
@@ -205,69 +200,38 @@ var lifeflow = function () {
                             return 'translate(' + xpos + ',' + y(d.y) + ')'
                         })
                 nodes.select('rect.event-node')
-                    //.transition().duration(exitTime)
                     .attr('height', function (d) {
                         //console.log(d.dy + '   ' + this.className.baseVal + '   ' + d.namePath())
                         return y(d.dy)
                     })
                 nodes.select('rect.gap-fill')
-                    //.transition().duration(exitTime)
                     .attr('height', function (d) {
                         //console.log(d.dy + '   ' + this.className.baseVal + '   ' + d.namePath())
                         return y(d.dy)
                     })
+                    .attr('x', function(d) { 
+                        var shift = d.backwards ?  d.parent.dx :
+                                -d.parent.dx + eventNodeWidth;
+                        return relativeX(shift)
+                    })
+                    .attr('width', function(d) { 
+                        return Math.max(relativeX( Math.abs(d.parent.dx) 
+                                - eventNodeWidth), 0);
+                    })
+                    //.attr('y', function(d) { return y(d.y) })
+                    .attr('height', function(d) { return y(d.dy) })
             }
-            var gapDays = 0;
-            var bloomTime = 3000;
-            var distance = relativeX.range()[1];
-            function bloom(bloomingNode, delay) {
-                var sel = d3.select(bloomingNode).select('rect.gap-fill');
-                var datum = bloomingNode.__data__;
-                //console.log(datum.backwards);
-                var dur = 0;
-                if (sel.size()) {
-                    var width = Math.max(relativeX(
-                                Math.abs(datum.parent.dx) 
-                                - eventNodeWidth - gapDays * 2), 0);
-                    dur = width * bloomTime / distance;
-                    if (datum.backwards) {
-                        sel.attr('transform', 'scale(-1,1)')
-                        //sel.attr('x',0)
-                        sel.attr('x', relativeX(datum.parent.dx + 
-                                    0*eventNodeWidth - gapDays));
-                        //sel.attr('x', relativeX(gapDays+ eventNodeWidth))
-                        sel.transition().delay(delay).duration(dur)
-                            .ease('linear')
-                        .attr('width', width)
-                        //.attr('x', relativeX(gapDays+ eventNodeWidth))
-                    } else {
-                        sel.attr('x', relativeX(-datum.parent.dx + eventNodeWidth + gapDays));
-                        //sel.attr('transform', 'scale(-1,-1)')
-                        //sel.attr('x', relativeX(gapDays+ eventNodeWidth))
-                        sel.transition().delay(delay).duration(dur)
-                            .ease('linear')
-                        .attr('width', width)
-                    }
-                }
-                d3.select(bloomingNode).select('rect.event-node')
-                    .transition().delay(delay + dur)
-                    .attr('width', relativeX(eventNodeWidth))
-                _.each(datum.children, function(d) {
-                    bloom(d.domNode, delay + dur);
-                })
-            }
-            chart.dispatch.on('toggleEvt', function (evtName) {
-                evtName.disabled = !evtName.disabled;
-                var recs = _(data).filter(function(d) {
-                    return !eventNames.lookup(d[eventNameProp]).disabled;
-                });
-                timelineData = edata.makeTimelines(recs);
-            });
-            chart.dispatch.on('selectRecs', function (recs) {
-                timelineData = edata.makeTimelines(recs);
-            });
+        });
+        return chart;
+    }
+
+    //============================================================
+    // mouseover code. tooltips broken for now
+    // distribution lines still working
+    //------------------------------------------------------------
 
             function rectMouseover(d, i) {
+                console.log("not connected right now")
                 d3.select(this)
                     .classed('hover', true)
                 var path = d.namePath({noRoot:false})
@@ -291,21 +255,6 @@ var lifeflow = function () {
             }
             function rectMouseout(d, i) {
                 dispatch.elementMouseout();
-            }
-            function TOOLTIP_HOLD_gMouseover(d, i) {
-                d3.select(this)
-                    .classed('hover', true)
-                var path = d.namePath({noRoot:false})
-                var avgDays = d3.mean(_(d.records).invoke('fromPrev'));
-
-                var tt = path + ', ' + d.records.length + ' timelines';
-                tt += ', mean ' + timeUnit + ': ' + avgDays;
-                dispatch.elementMouseover({
-                    value: d,
-                    text: tt,
-                    idx: i,
-                    e: d3.event
-                });
             }
             function gMouseout(d, i) {
                 d3.select(this).selectAll('rect.gap-fill').attr('opacity',.5)
@@ -428,14 +377,9 @@ var lifeflow = function () {
                     nodesWithDistributionsShowing.push(lfnode);
                 }
             }
-        });
-        return chart;
-    }
-
     //============================================================
     // Expose Public Variables
     //------------------------------------------------------------
-
     chart.dispatch = dispatch;
 
     chart.entityIdProp = function (_) {
