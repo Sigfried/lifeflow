@@ -1,5 +1,5 @@
 'use strict';
-nv.models.lifeflow = function () {
+var lifeflow = function () {
 
     //============================================================
     // Public Variables with Default Settings
@@ -32,7 +32,8 @@ nv.models.lifeflow = function () {
         , x = d3.scale.linear()
         , y = d3.scale.linear()
         , relativeX 
-        , color = nv.utils.defaultColor()
+        //, color = nv.utils.defaultColor()
+        , color = d3.scale.category20()
         , dispatch = d3.dispatch('chartClick', 'elementClick', 
                 'elementDblClick', 'elementMouseover', 'elementMouseout',
                 'toggleEvt','alignBy','selectRecs','doneDrawing'),
@@ -40,43 +41,14 @@ nv.models.lifeflow = function () {
             ;
     //============================================================
     function chart(selection) {
-        selection.each(function (data) {
-            edata = evtData()
-                        .entityIdProp(chart.entityIdProp())
-                        .eventNameProp(chart.eventNameProp())
-                        .startDateProp(chart.startDateProp())
-            if (chart.unitProp()) edata.unitProp(chart.unitProp());
-            if (!eventNames) setEventNames(data);
-            if (!timelineData) timelineData = edata.timelines(data);
-            var lifeflowNodes;
-            if (chart.alignBy() === 'Start' || !chart.alignBy()) {
-                var startRecs = _.chain(timelineData)
-                                    .pluck('records')
-                                    .map(_.first)
-                                    .value();
-                lifeflowNodes = makeLifeflowNodes(startRecs,
-                    function(d) { return d.next() });
-                //lifeflowNodes.shift();
-            } else if (chart.alignBy() === 'End') {
-                var startRecs = _.chain(timelineData)
-                                    .pluck('records')
-                                    .map(_.last)
-                                    .value();
-                lifeflowNodes = makeLifeflowNodes(startRecs,
-                    function(d) { return d.prev() });
-            } else {
-                var startRecs = _.chain(timelineData.data())
-                                    .filter(function(d) {
-                                        return d[eventNameProp] === chart.alignBy() 
-                                    })
-                                    .value();
-                var lifeflowNodesRight = makeLifeflowNodes(startRecs,
-                    function(d) { return d.next() });
-                var lifeflowNodesLeft = makeLifeflowNodes(startRecs,
-                    function(d) { return d.prev() }, true);
-                //lifeflowNodesLeft = [];
-                lifeflowNodes = lifeflowNodesLeft.concat(lifeflowNodesRight);
-            }
+        selection.each(function (lifeflowNodes) {
+            x = d3.scale.linear().range([0,width])
+            y = d3.scale.linear()
+                .range([0,height])
+                .domain([0,lifeflowNodes
+                    .where({depth:0})
+                    .pluck('dy')
+                    .reduce(function(p,c) { return p + c }) - 1])
             x.domain([
                             d3.min([0].concat(lifeflowNodes.map(function(d) { 
                                 return d.x + d.dx
@@ -88,9 +60,7 @@ nv.models.lifeflow = function () {
             relativeX = d3.scale.linear()
                                 .range(x.range())
                                 .domain([0, x.domain()[1] - x.domain()[0]]);
-            var availableWidth = width - margin.left - margin.right,
-                availableHeight = height - margin.top - margin.bottom,
-                container = d3.select(this);
+            var container = d3.select(this);
             var nodes = container.selectAll('g.event-node')
                 .data(lifeflowNodes
                     //_(lifeflowNodes).filter(function (d) { return d.dx !== 0 })
@@ -246,29 +216,6 @@ nv.models.lifeflow = function () {
                         //console.log(d.dy + '   ' + this.className.baseVal + '   ' + d.namePath())
                         return y(d.dy)
                     })
-                /*  moved up to creation
-                container.selectAll('g.event-node')
-                        .attr('transform', function (d) {
-                            var xpos = x(d.x)
-                            return 'translate(' + xpos + ',' + y(d.y) + ')'
-                            return 'translate(0,' + y(d.y) + ')'
-                        })
-                        */
-return;
-                var gapDays = 0;
-                nodes.select('rect.gap-fill')
-                    //.transition().delay(2000).duration(2000)
-                    .attr('width', function (d) {
-                        return Math.max(relativeX(Math.abs(d.parent.dx) 
-                                - eventNodeWidth - gapDays * 2), 0);
-                    })
-                    .attr('x', function (d) {
-                        if (d.parent.backwards) {
-                            return relativeX(gapDays);
-                        } else {
-                            return relativeX(-d.parent.dx +  gapDays);
-                        }
-                    })
             }
             var gapDays = 0;
             var bloomTime = 3000;
@@ -309,14 +256,6 @@ return;
                     bloom(d.domNode, delay + dur);
                 })
             }
-            /*
-            container.selectAll('rect.event-node')
-                .attr('height', function (d) {
-                    //if (d.namePath({noRoot:true})==="Pending/Open") 
-                    console.log(d.dy + '->' + y(d.dy) + '   ' + this.className.baseVal + '   ' + d.namePath())
-                    return y(d.dy)
-                })
-            */
             chart.dispatch.on('toggleEvt', function (evtName) {
                 evtName.disabled = !evtName.disabled;
                 var recs = _(data).filter(function(d) {
@@ -489,79 +428,8 @@ return;
                     nodesWithDistributionsShowing.push(lfnode);
                 }
             }
-
-            return;
-            rects
-                .on('mouseout', function (d, i) {
-                    d3.select(this).classed('hover', false);
-                    dispatch.elementMouseout({
-                        value: getY(d, i),
-                        point: d,
-                        series: data[d.series],
-                        pointIndex: i,
-                        seriesIndex: d.series,
-                        e: d3.event
-                    });
-                })
-                .on('click', function (d, i) {
-                    dispatch.elementClick({
-                        value: getY(d, i),
-                        point: d,
-                        series: data[d.series],
-                        pos: [
-                            x(getX(d, i)),
-                            y(getY(d, i)) + (y.rangeBand() * d.series + .5 / data.length)
-                        ], // TODO: Figure out why the value appears to be shifted
-                        pointIndex: i,
-                        seriesIndex: d.series,
-                        e: d3.event
-                    });
-                    d3.event.stopPropagation();
-                })
-                .on('dblclick', function (d, i) {
-                    dispatch.elementDblClick({
-                        value: getY(d, i),
-                        point: d,
-                        series: data[d.series],
-                        pos: [
-                            x(getX(d, i)),
-                            y(getY(d, i)) + (y.rangeBand() * d.series + .5 / data.length)
-                        ],
-                        pointIndex: i,
-                        seriesIndex: d.series,
-                        e: d3.event
-                    });
-                    d3.event.stopPropagation();
-                });
-
-
         });
         return chart;
-    }
-    function setEventNames(data) {
-        eventNames = enlightenedData.group(data, eventNameProp)
-                .sort(function(a,b) {
-                    return eventOrder.indexOf(a.toString()) -
-                           eventOrder.indexOf(b.toString())
-                });
-        if (eventOrder.length) {
-            if (_.difference(eventNames.rawValues(), eventOrder).length) {
-                throw new Error("found unexpected eventNames")
-            }
-        } else {
-            eventOrder = eventNames.rawValues();
-        }
-        alignChoices = [new String('Start'),
-                        new String('End') ]
-                .concat(eventNames.map(function(d) { 
-                    return new String(d.valueOf())}));
-        _.each(alignChoices, function(d) { d.disabled = true });
-        alignChoices[0].disabled = false;
-        //chart.eventNames(eventNames); // not necessary
-        var evtColor = d3.scale.category20()
-            .domain(eventNames.rawValues().concat(['Start','End']));
-            //.domain(eventNames.rawValues().concat(['Start','End']));
-        chart.color(evtColor);
     }
 
     //============================================================
@@ -650,7 +518,8 @@ return;
 
     chart.color = function (_) {
         if (!arguments.length) return color;
-        color = nv.utils.getColor(_);
+        //color = nv.utils.getColor(_);
+        color = _;
         return chart;
     };
 
@@ -715,106 +584,5 @@ return;
         if (unitProp === 1000*60*60*24*365.25/12) timeUnit = 'months';
         return chart;
     };
-
-    function makeGetterSetter(obj, prop) { // might be nice
-        // but lose the link to enclosed public vars
-        var closureVals = {};
-        obj[prop] = function (_) {
-            if (!arguments.length) console.log('getting ' + prop + ': ' + closureVals[prop]);
-            if (!arguments.length) return closureVals[prop];
-            console.log('setting ' + prop + ': ' + _);
-            closureVals[prop] = _;
-            return obj;
-        };
-    }
-    //============================================================
-
-    // not sure where this belongs. allowed it to use closure vars from
-    // chart right now
-    function endNode(parent) {
-        var enode = {
-            parent:parent,
-            next: function() { 
-                return this },
-            prev: function() { return this }
-        };
-        enode[eventNameProp] = 'END_NODE';
-        return enode;
-    }
-    var makeLifeflowNodes = function(startRecs, nextFunc, backwards, maxDepth) {
-        var groupKeyName = (backwards ? 'prev' : 'next') + '_' + eventNameProp;
-        function preGroupRecsHook(records) { // group next records, not the ones we start with
-            return _.chain(records)
-                            //.tap(function(d) { console.log(d) })
-                            .filter(nextFunc)
-                            .map(nextFunc)
-                            .value();
-        }
-        function addChildren(list, notRoot) {
-            if (maxDepth && list.length && list[0].depth && list[0].depth >= maxDepth)
-                return;
-            if (!notRoot) {
-                list = enlightenedData.group(startRecs, eventNameProp);
-                list.sort(function(a,b) {
-                            return b.records.length - a.records.length
-                        })
-            }
-            _.each(list, function(d) { 
-                //d.depth = d.parent ? d.parent.depth + 1 : 0;
-                d.extendGroupBy(eventNameProp, {
-                    preGroupRecsHook:preGroupRecsHook,
-                    childProp:'children'})
-                addChildren(d.children, true);
-                d.children.sort(function(a,b) {
-                            return b.records.length - a.records.length
-                        })
-                })
-            return list;
-        }
-        var lfnodes = addChildren(startRecs);
-        lfnodes = position({children:lfnodes,records:[]}).children;
-        return lfnodes.flattenTree();
-
-
-        function rectWidth(recs) {
-            return d3.mean(recs.map(function(d) { 
-                return d.timeTo(nextFunc(d))
-            }));
-        }
-        function position(lfnode, yOffset) {
-            var children = lfnode.children;
-            if (lfnode.parent) {
-                lfnode.x = lfnode.parent.x + lfnode.parent.dx 
-                    //+ eventNodeWidth * (!negative || -1);;
-                lfnode.y = lfnode.parent.y;
-            } else {
-                lfnode.x = alignmentLineWidth * (!backwards || -1);
-                lfnode.y = 0;
-            }
-            lfnode.y += (yOffset || 0);
-            lfnode.dx = rectWidth(lfnode.records) + eventNodeWidth;
-            lfnode.dy = lfnode.records.length;
-            if (children && (n = children.length)) {
-                var i = -1, c, yOffset = 0, n;
-                while (++i < n) {
-                    position(c = children[i], yOffset)
-                    yOffset += c.dy;
-                }
-            }
-            lfnode.backwards = !!backwards;
-            return lfnode;
-        }
-        var nodes = enlightenedData.group(startRecs, eventNameProp, {
-                        preGroupRecsHook: preGroupRecsHook,
-                        postGroupGroupsHook: postGroupGroupsHook,
-                        dimName: groupKeyName,
-                        //postGroupValHook: postGroupValHook,
-                        recurse: childrenFunc,
-                        childProp: 'children'
-                    });
-        nodes = position({children:nodes,records:[]}).children;
-        return nodes.flattenTree();
-    }
-    chart.makeLifeflowNodes = makeLifeflowNodes;
     return chart;
 }

@@ -1,0 +1,128 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="en-US" >
+</head>
+<body>
+    <style>
+       .axis {
+            shape-rendering: crispEdges;
+        }
+        .x.axis line {
+            stroke: #ccc;
+        }
+        .x.axis .minor {
+            stroke-opacity: .5;
+        }
+        .x.axis path {
+            display: none;
+        }
+/*
+        .bar {
+            fill: steelblue;
+        }
+*/
+        text {
+            color: black;
+        }
+    </style>
+    <link href="./nv.d3.css" rel="stylesheet" type="text/css">
+    <style>
+        svg { height: auto; }
+    </style>
+
+
+    <script type="text/javascript" src="./d3/d3.js"></script>
+    <script type="text/javascript" src="./underscore//underscore.js"></script>
+    <script type="text/javascript" src="./enlightened-data/enlightened-data.js"></script>
+    <script src="./evtData.js"></script>
+    <script src="./lifeflowData.js"></script>
+    <script src="./lifeflow.js"></script>
+
+    <!--
+    <script src="./timelines.js"></script>
+    <script src="./lifeflowChart.js"></script>
+    -->
+
+    <!-- nvd3 stuff
+    <script type="text/javascript" src="./nvd3/nv.d3.js"></script>
+    <script src="./nvd3/src/tooltip.js"></script>
+    <script src="./nvd3/src/utils.js"></script>
+    <script src="./legend.js"></script>
+    <script src="./nvd3/src/models/axis.js"></script>
+
+    just for contextMenu
+    <script type="text/javascript" src="./jquery-1.9.1.js"></script>
+    <script src="./jquery-contextMenu/jquery.contextMenu.js"></script>
+    <link href="./jquery-contextMenu/jquery.contextMenu.css" rel="stylesheet" type="text/css">
+
+    -->
+
+    <script>
+
+        d3.csv('./sampleData/huricane.csv', function (data) {
+            var container = d3.select('body')
+                                .append('div')
+                                .append('svg')
+                                ;
+            edata = evtData()
+                    .entityIdProp('hur_id')
+                    .eventNameProp('status')
+                    .startDateProp('date')
+                    .unitProp(1000*60*60) // hours
+            //if (!eventNames) setEventNames(data);
+            var timelineData = edata.timelines(data);
+            var startRecs = _.chain(timelineData)
+                                .pluck('records')
+                                .map(_.first)
+                                .value();
+            var lifeflowNodes = lifeflowData()
+                    .eventNameProp('status')
+                    (startRecs, function(d) { return d.next() });
+            /*
+            if (chart.alignBy() === 'Start' || !chart.alignBy()) {
+                var startRecs = _.chain(timelineData)
+                                    .pluck('records')
+                                    .map(_.first)
+                                    .value();
+                lifeflowNodes = lifeflowData(startRecs,
+                    function(d) { return d.next() });
+                //lifeflowNodes.shift();
+            } else if (chart.alignBy() === 'End') {
+                var startRecs = _.chain(timelineData)
+                                    .pluck('records')
+                                    .map(_.last)
+                                    .value();
+                lifeflowNodes = lifeflowData(startRecs,
+                    function(d) { return d.prev() });
+            } else {
+                var startRecs = _.chain(timelineData.data())
+                                    .filter(function(d) {
+                                        return d[eventNameProp] === chart.alignBy() 
+                                    })
+                                    .value();
+                var lifeflowNodesRight = lifeflowData(startRecs,
+                    function(d) { return d.next() });
+                var lifeflowNodesLeft = lifeflowData(startRecs,
+                    function(d) { return d.prev() }, true);
+                //lifeflowNodesLeft = [];
+                lifeflowNodes = lifeflowNodesLeft.concat(lifeflowNodesRight);
+            }
+            */
+
+            var lifeflowChart = lifeflow()
+                    .entityIdProp('hur_id')
+                    .eventNameProp('status')
+                    .startDateProp('date')
+                    .unitProp(1000*60*60) // hours
+                    .height(window.innerHeight - 100)
+                    .width(window.innerWidth - 100)
+                                ;
+            container
+                    .datum(lifeflowNodes)
+                    .call(lifeflowChart)
+        });
+    </script>
+</body>
+</html>
