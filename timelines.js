@@ -1,5 +1,5 @@
 'use strict';
-nv.models.timelines = function () {
+var timelineChart = function () {
 
     //============================================================
     // Public Variables with Default Settings
@@ -28,7 +28,8 @@ nv.models.timelines = function () {
         , x = d3.scale.linear()
         , y = d3.scale.linear()
         , yOrd = d3.scale.ordinal()
-        , color = nv.utils.defaultColor()
+        //, color = nv.utils.defaultColor()
+        , color = d3.scale.category20()
         , showValues = false
         , valuePadding = 60
         , valueFormat = d3.format(',.2f')
@@ -41,25 +42,18 @@ nv.models.timelines = function () {
         , level = true
         , sortFunc
             ;
-    var lifeflow = nv.models.lifeflow();
+    var lifeflow = lifeflowChart();
     var evtLFMap;
     //============================================================
     var domIds = 1;
     var lfnodes;  // move this!!!
 
     function chart(selection) {
-        selection.each(function (data) {
-            edata = evtData()
-                        .entityIdProp(chart.entityIdProp())
-                        .eventNameProp(chart.eventNameProp())
-                        .startDateProp(chart.startDateProp())
-            if (chart.unitProp()) edata.unitProp(chart.unitProp());
-            if (!eventNames) setEventNames(data);
-            if (!timelineData) timelineData = edata.timelines(data);
-            var availableWidth = width - margin.left - margin.right,
-                availableHeight = height - margin.top - margin.bottom,
-                container = d3.select(this);
-
+        selection.each(function (timelineData) {
+            var container = d3.select(this);
+            x = d3.scale.linear().range([0,width])
+            y = d3.scale.linear().range([0,height])
+                    .domain([0,timelineData.length])
             var fmt = d3.format('15.0f');
             if (alignBy === "Lifeflow") {
                 //lfnodes = edata.nodes('first', true);
@@ -329,7 +323,7 @@ nv.models.timelines = function () {
                         ]);
                 xDayScale = d3.scale.linear().range(x.range())
                                 .domain([0, (x.domain()[1] -x.domain()[0]) / 
-                                            edata.unitProp()]);
+                                            chart.unitProp()]);
                 var xx = function(d) {
                     return x(d.startDate());
                 }
@@ -637,7 +631,7 @@ nv.models.timelines = function () {
 
     chart.color = function (_) {
         if (!arguments.length) return color;
-        color = nv.utils.getColor(_);
+        color = _;
         return chart;
     };
 

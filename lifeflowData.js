@@ -3,10 +3,16 @@ var lifeflowData = function () {
     var 
         eventNameProp = null,
         alignmentLineWidth = 28,
-        eventNodeWidth = 50,
-        endNodeWidth = 0
+        eventNodeWidth = 0,
+        endNodeWidth = 0,
+        rectWidth = function(recs) {
+            return d3.mean(recs.map(function(d) { 
+                return d.timeTo(nextFunc(d))
+            }));
+        },
+        nextFunc = function(d) { return d.next() }
             ;
-    var makeNodes = function(startRecs, nextFunc, backwards, maxDepth) {
+    var makeNodes = function(startRecs, UNUSED, backwards, maxDepth) {
         var groupKeyName = (backwards ? 'prev' : 'next') + '_' + eventNameProp;
         function preGroupRecsHook(records) { // group next records, not the ones we start with
             return _.chain(records)
@@ -37,27 +43,27 @@ var lifeflowData = function () {
             return list;
         }
         var lfnodes = addChildren(startRecs);
-        lfnodes = position({children:lfnodes,records:[]}).children;
+        var fakeRoot = enlightenedData.addGroupMethods([]).asRootVal();
+        fakeRoot.children = lfnodes;
+        //lfnodes = position({children:lfnodes,records:[]}).children;
+        lfnodes = position(fakeRoot).children;
         return lfnodes.flattenTree();
 
 
-        function rectWidth(recs) {
-            return d3.mean(recs.map(function(d) { 
-                return d.timeTo(nextFunc(d))
-            }));
-        }
         function position(lfnode, yOffset) {
             var children = lfnode.children;
             if (lfnode.parent) {
                 lfnode.x = lfnode.parent.x + lfnode.parent.dx 
-                    //+ eventNodeWidth * (!negative || -1);;
+                    + eventNodeWidth;
+                //lfnode.x = lfnode.parent.x + eventNodeWidth;
                 lfnode.y = lfnode.parent.y;
             } else {
                 lfnode.x = alignmentLineWidth * (!backwards || -1);
                 lfnode.y = 0;
             }
             lfnode.y += (yOffset || 0);
-            lfnode.dx = rectWidth(lfnode.records) + eventNodeWidth;
+            lfnode.dx = rectWidth(lfnode.records);
+            //lfnode.x += lfnode.dx;
             lfnode.dy = lfnode.records.length;
             if (children && (n = children.length)) {
                 var i = -1, c, yOffset = 0, n;
@@ -92,17 +98,27 @@ var lifeflowData = function () {
     makeNodes.alignmentLineWidth = function(_) {
         if (!arguments.length) return alignmentLineWidth;
         alignmentLineWidth = _;
-        return lifeflow;
+        return makeNodes;
     };
     makeNodes.eventNodeWidth = function(_) {
         if (!arguments.length) return eventNodeWidth;
         eventNodeWidth = _;
-        return lifeflow;
+        return makeNodes;
     };
     makeNodes.endNodeWidth = function(_) {
         if (!arguments.length) return endNodeWidth;
         endNodeWidth = _;
-        return lifeflow;
+        return makeNodes;
+    };
+    makeNodes.rectWidth = function(_) {
+        if (!arguments.length) return rectWidth;
+        rectWidth = _;
+        return makeNodes;
+    };
+    makeNodes.nextFunc = function(_) {
+        if (!arguments.length) return nextFunc;
+        nextFunc = _;
+        return makeNodes;
     };
     //============================================================
     function endNode(parent) {  // not using yet

@@ -1,5 +1,5 @@
 'use strict';
-var lifeflow = function () {
+var lifeflowChart = function () {
 
     //============================================================
     // Public Variables with Default Settings
@@ -24,7 +24,7 @@ var lifeflow = function () {
         endDateField = null,
         defaultDuration = null,
         alignmentLineWidth = 28,
-        eventNodeWidth = 5,
+        eventNodeWidth = 0,
         endNodeWidth = 0,
         width = 960,
         height = 500,
@@ -34,10 +34,13 @@ var lifeflow = function () {
         , relativeX 
         //, color = nv.utils.defaultColor()
         , color = d3.scale.category20()
+        , alignBy
+        , dispatch = d3.dispatch('eventNodeMouseover');
+        /*
         , dispatch = d3.dispatch('chartClick', 'elementClick', 
                 'elementDblClick', 'elementMouseover', 'elementMouseout',
                 'toggleEvt','alignBy','selectRecs','doneDrawing'),
-        alignBy
+        */
             ;
     //============================================================
     function chart(selection) {
@@ -153,13 +156,14 @@ var lifeflow = function () {
                         .attr('path', function (d) {
                             return d.namePath({noRoot:false}) // don't need noRoot anymore
                         })
-                        /* try creating in final position
                         .attr('transform', function (d) {
-                            return 'translate(0,' + y(d.y) + ')'
+                            return 'translate(' + x(d.x) + ',' + y(d.y) + ')'
                         })
-                        */
-                        .on("mouseover", gMouseover)
-                        .on("mouseout", gMouseout)
+                        .on("mouseover", function(d,i) {
+                            dispatch.eventNodeMouseover(chart, this, d, i);
+                        })
+                        //.on("mouseover", gMouseover)
+                        //.on("mouseout", gMouseout)
                 var newRects = enteringGs
                     //.filter(function(d) { return d.depth !== 0 })
                     .append('rect')
@@ -167,16 +171,18 @@ var lifeflow = function () {
                         .attr('fill', function (d) {
                             return color(d.valueOf())
                         })
+                        .attr('x', function(d) { return relativeX(d.dx)})
                         .attr('width', relativeX(eventNodeWidth))
-                    .on("mouseover", rectMouseover)
-                    .on("mouseout", rectMouseout)
-                        // transform to actual width!!!
-                        // .attr('width', relativeX(eventNodeWidth))
-                        /*
                         .attr('height', function (d) {
+                            //console.log(d.dy + '   ' + this.className.baseVal + '   ' + d.namePath())
                             return y(d.dy)
                         })
-                        */
+                        //.attr('y', function(d) { return y(d.y) })
+                        .attr('height', function(d) { return y(d.dy) })
+                    //.on("mouseover", rectMouseover)
+                    //.on("mouseout", rectMouseout)
+                return;
+                /*
                 var fillRects = enteringGs
                     .filter(function(d) { return d.parent })
                     .append('rect')
@@ -194,6 +200,7 @@ var lifeflow = function () {
                         })
                     .on("mouseover", rectMouseover)
                     .on("mouseout", rectMouseout)
+                */
                 var fmt = d3.format('5.0f');
                 nodes.attr('transform', function (d) {
                             var xpos = x(d.x)
@@ -275,6 +282,7 @@ var lifeflow = function () {
             }
             var nodesWithDistributionsShowing = [];
             function gMouseover(lfnode, i) {
+                throw new Error("shouldn't be working now");
                 /*
                 d3.selectAll('rect')
                     .transition().duration(700)
@@ -298,7 +306,7 @@ var lifeflow = function () {
                     nodesWithDistributionsShowing.push(lfnode);
                 }
                 d3.select(this).selectAll('rect.gap-fill').attr('opacity',1)
-                var recs, xFunc, durationFunc;
+                var recs, xFunc;
                 if (!lfnode.parent) {
                     recs = [];
                 } else if (lfnode.backwards) {
@@ -310,16 +318,13 @@ var lifeflow = function () {
                             return relativeX(-lfnode.parent.dx -
                                     d.toNext())
                     };
-                    durationFunc = 'toNext';
                 } else {
                     recs = lfnode.records.sort(function (a, b) {
                         return a.fromPrev() - b.fromPrev();
                     });
                     xFunc = function(d) {
-                            return relativeX(-lfnode.parent.dx +
-                                    d.fromPrev() + eventNodeWidth)
+                        return relativeX(d.fromPrev())
                     };
-                    durationFunc = 'fromPrev';
                 }
                 var line = d3.svg.line()
                     .x(xFunc)
@@ -502,17 +507,17 @@ var lifeflow = function () {
     chart.alignmentLineWidth = function(_) {
         if (!arguments.length) return alignmentLineWidth;
         alignmentLineWidth = _;
-        return lifeflow;
+        return chart;
     };
     chart.eventNodeWidth = function(_) {
         if (!arguments.length) return eventNodeWidth;
         eventNodeWidth = _;
-        return lifeflow;
+        return chart;
     };
     chart.endNodeWidth = function(_) {
         if (!arguments.length) return endNodeWidth;
         endNodeWidth = _;
-        return lifeflow;
+        return chart;
     };
     chart.unitProp = function(_) {
         if (!arguments.length) return unitProp;
