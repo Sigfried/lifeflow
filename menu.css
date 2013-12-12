@@ -13,6 +13,12 @@
   margin: 0;
   padding: 0;
 }
+#cssmenu ul li[filtered=true]: {
+    opacity: 0.5;
+}
+#cssmenu ul li[filtered=false]: {
+    opacity: 1;
+}
 #cssmenu ul {
   position: relative;
   z-index: 597;

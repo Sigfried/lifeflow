@@ -63,6 +63,22 @@
     -->
 
     <script>
+        var eventOrder = [
+                'Subtropical storm',
+                'Genesis',
+                'Disturbance',
+                'Subtropical Depression',
+                'Tropical Wave',
+                'Tropical Depression',
+                'Tropical Storm',
+                'Hurricane',
+                'Landfall', 
+                'Extratropical',
+                'Low',
+                'Intensity Peak', 
+                'Maximum wind',
+                'Status change'];
+            var filteredOut = [];
 
         d3.csv('./sampleData/huricane.csv', function (data) {
             var extras = lifeflowExtras();
@@ -90,20 +106,29 @@
                     (startRecs);
             var menuData = [
                 { label: 'Chart type', subs: [
-                    { label: 'LifeFlow', action: showLifeflow, subs: [
+                    { label: 'LifeFlow', action: showLifeflow, 
+                        refresh: true,
+                        subs: [
                             { label: 'Fill gap from previous event',
                                 action:null},
                             { label: 'Hide distribution on mouseover',
                                 action:null}
                         ]
                     },
-                    { label: 'Timelines', action:showTimelines, subs: [] },
-                    { label: 'Icicle', action:null, subs: [] }
+                    { label: 'Timelines', action:showTimelines, 
+                        refresh: true, subs: [] },
+                    { label: 'Icicle', action:null, 
+                        refresh: true, subs: [] }
                 ]},
-                { label: 'Filter out', action: null, subs: [ ] },
-                { label: 'Filter out', action: null, subs: [ ] },
-                { label: 'Align in', action: null, subs: [ ] },
-                { label: 'Align in', action: null, subs: [ ] },
+                { label: 'Filter', subs: 
+                    _(eventOrder).map(function(evtName) {
+                        var filterThis = !_(filteredOut).contains(evtName);
+                        return { label: evtName, 
+                            LIprops: {filtered: filterThis},
+                            action: _.partial(filter, filterThis, evtName) }
+                    })
+                },
+                { label: 'Align by', action: null, subs: [ ] },
                 ];
 
             extras.menu(d3.select('body'), menuData);
@@ -112,7 +137,16 @@
                                 .append('svg')
                                     .attr('id','main')
                                 ;
+            extras.dispatch.on('refresh', function() {
+                d3.select('svg#main').selectAll('*').remove();
+            })
 
+            function filter(filterThis, evtName) {
+                if (filterThis && !_(filteredOut).contains(evtName))
+                    filteredOut.push(evtName);
+                if (!filterThis)
+                    filteredOut = _(filteredOut).without(evtName);
+            }
             function showLifeflow() {
                 var chart = lifeflowChart()
                         .entityIdProp('hur_id')

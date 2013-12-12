@@ -15,6 +15,7 @@ var lifeflowExtras = function() {
      *      show distribution on mouseover
      *          do/don't hide on mouseout so evt mouseover will work
      */
+    var dispatch = exp.dispatch = d3.dispatch('refresh')
 
     exp.menu = function(targetSelection, menuData) {
         menuRecurse(targetSelection.append('div').attr('id','cssmenu'), 
@@ -33,6 +34,7 @@ var lifeflowExtras = function() {
         LIs.filter(function(d) { return d.action })
             .selectAll('a')
             .on('click',function(d) {
+                if (d.refresh) dispatch.refresh();
                 d.action();
             })
         LIs.filter(function(d) { return !d.action })
@@ -43,6 +45,10 @@ var lifeflowExtras = function() {
             if (d.subs && d.subs.length) {
                 menuRecurse(d3.select(this), d.subs);
             }
+            if (d.LIprops)
+                for (var p in d.LIprops) {
+                    d3.select(this).attr(p, d.LIprops[p])
+                }
         })
     }
 

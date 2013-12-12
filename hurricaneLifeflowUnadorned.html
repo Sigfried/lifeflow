@@ -80,48 +80,19 @@
             var lifeflowNodes = lifeflowData()
                     .eventNameProp('status')
                     (startRecs, function(d) { return d.next() });
-            /*
-            if (chart.alignBy() === 'Start' || !chart.alignBy()) {
-                var startRecs = _.chain(timelineData)
-                                    .pluck('records')
-                                    .map(_.first)
-                                    .value();
-                lifeflowNodes = lifeflowData(startRecs,
-                    function(d) { return d.next() });
-                //lifeflowNodes.shift();
-            } else if (chart.alignBy() === 'End') {
-                var startRecs = _.chain(timelineData)
-                                    .pluck('records')
-                                    .map(_.last)
-                                    .value();
-                lifeflowNodes = lifeflowData(startRecs,
-                    function(d) { return d.prev() });
-            } else {
-                var startRecs = _.chain(timelineData.data())
-                                    .filter(function(d) {
-                                        return d[eventNameProp] === chart.alignBy() 
-                                    })
-                                    .value();
-                var lifeflowNodesRight = lifeflowData(startRecs,
-                    function(d) { return d.next() });
-                var lifeflowNodesLeft = lifeflowData(startRecs,
-                    function(d) { return d.prev() }, true);
-                //lifeflowNodesLeft = [];
-                lifeflowNodes = lifeflowNodesLeft.concat(lifeflowNodesRight);
-            }
-            */
 
-            var lifeflowChart = lifeflow()
+            var chart = lifeflowChart()
                     .entityIdProp('hur_id')
                     .eventNameProp('status')
                     .startDateProp('date')
                     .unitProp(1000*60*60) // hours
-                    .height(window.innerHeight - 100)
+                    .eventNodeWidth(1)
+                    .height(window.innerHeight - 120)
                     .width(window.innerWidth - 100)
-                                ;
+
             container
                     .datum(lifeflowNodes)
-                    .call(lifeflowChart)
+                    .call(chart)
         });
     </script>
 </body>
