@@ -1,0 +1,187 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="en-US" >
+</head>
+<body>
+    <style>
+       .axis {
+            shape-rendering: crispEdges;
+        }
+        .x.axis line {
+            stroke: #ccc;
+        }
+        .x.axis .minor {
+            stroke-opacity: .5;
+        }
+        .x.axis path {
+            display: none;
+        }
+/*
+        .bar {
+            fill: steelblue;
+        }
+*/
+        text {
+            color: black;
+        }
+    </style>
+    <link href="./nv.d3.css" rel="stylesheet" type="text/css">
+    <style>
+        svg { height: auto; }
+    </style>
+
+    <script type="text/javascript" src="./d3/d3.js"></script>
+    <script type="text/javascript" src="./underscore//underscore.js"></script>
+    <script type="text/javascript" src="./jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="./enlightened-data/enlightened-data.js"></script>
+    <script type="text/javascript" src="./nvd3/nv.d3.js"></script>
+    <script src="./nvd3/src/tooltip.js"></script>
+    <script src="./nvd3/src/utils.js"></script>
+    <script src="./legend.js"></script>
+    <script src="./nvd3/src/models/axis.js"></script>
+    <script src="./evtData.js"></script>
+    <script src="./lifeflowWithStuff.js"></script>
+    <script src="./timelines.js"></script>
+    <script src="./lifeflowChartWithStuff.js"></script>
+
+    <script src="./jquery-contextMenu/jquery.contextMenu.js"></script>
+    <link href="./jquery-contextMenu/jquery.contextMenu.css" rel="stylesheet" type="text/css">
+
+    <script>
+
+    $(document).ready(function() {
+        var tooltip = d3.select("body")
+            .append("div")
+            .style("position", "absolute")
+            .style("z-index", "10")
+            .style("visibility", "hidden")
+            .text("a simple tooltip");
+        d3.csv('./sampleData/huricane.csv', function (data) {
+            var container = d3.select('body')
+                                .append('div')
+                                ;
+            var lifeflowChart = nv.models.lifeflowChart()
+                    .entityIdProp('hur_id')
+                    .eventNameProp('status')
+                    .startDateProp('date')
+                    .eventOrder([
+                        'Subtropical storm',
+                        'Genesis',
+                        'Disturbance',
+                        'Subtropical Depression',
+                        'Tropical Wave',
+                        'Tropical Depression',
+                        'Tropical Storm',
+                        'Hurricane',
+                        'Landfall', 
+                        'Extratropical',
+                        'Low',
+                        'Intensity Peak', 
+                        'Maximum wind',
+                        'Status change'])
+                    .unitProp(1000*60*60) // hours
+                    .height($(window).height() - 100)
+                    .width($(window).width() - 100)
+                                ;
+            container
+                    .datum(data)
+                    .call(lifeflowChart);
+
+            return;
+            var nodes = container.selectAll('g.rect')
+                            .data(lifeflowNodes);
+            nodes.enter().append('g')
+                .attr('transform', function(d) {
+                    return 'translate(' + x(d.x) + ',' + y(d.y) + ')'
+                })
+                .on("mouseover", function(d,i){
+                    d3.selectAll('rect')
+                        .transition().duration(700)
+                        .attr('opacity',0.4);
+                    var dist = _.chain(d.records)
+                                    .pluck('days')
+                                    .sort(d3.ascending).value();
+                    var line = d3.svg.line()
+                        .x(function(d) { return x(d) })
+                        .y(function(d,i) { return y(i) });
+                    d3.select(this).selectAll('path')
+                        .data([dist])
+                        .enter()
+                        .append('path')
+                        .attr('d', line)
+                        .attr('fill-opacity', 0)
+                        .attr('stroke','black')
+                        .style('pointer-events','none')
+                    d3.select(this).selectAll('circle')
+                        .data(dist)
+                        .enter()
+                        .append('circle')
+                        .attr('cx', function(d) { return x(d) })
+                        .attr('cy', function(d,i) { return y(i) })
+                        .attr('r', 4)
+                        .style('fill-opacity', 0)
+                        .style('pointer-events','none')
+                        .attr('stroke', function() { 
+                            return color(d.valueOf()) })
+                })
+                .on("mouseout", function(d,i){
+                    d3.select(this).selectAll('path').remove();
+                    d3.select(this).selectAll('circle').remove();
+                    d3.selectAll('rect')
+                        .transition().duration(700)
+                        .attr('opacity',1);
+                })
+                .append('rect')
+                    .attr('width', function(d) { return x(d.dx) })
+                    .attr('height', function(d) { return y(d.dy) })
+                    .attr('fill', function(d) { 
+                        return color(d.valueOf()) })
+                    .on("mouseover", function(d,i){
+                        var path = d.namePath().replace(/^Root\//,'');
+
+
+                        tooltip.text(path + ', ' + d.records.length + ' timelines')
+                        return tooltip.style("visibility", "visible");
+                    })
+                    .on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+                    .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+
+
+            function r(d) { return Math.round(d) }
+
+            return;
+            var chart;
+            nv.addGraph(function() {
+                $('#waterfall-div').height($(window).height() - 80);
+                chart = nv.models.summaryChart()
+                            .entityIdProp('STUDYNUMBER')
+                            .eventNameProp('EVENT')
+                            .startDateProp('startdt')
+                            .eventOrder(['In Development','Pending','Open','Enrolling',
+                            'Closed to Accrual', 'Closed to Follow Up','POS/PAC','Concluded',
+                            'On Hold','Deferred','Withdrawn',
+                            'Temporarily Closed','FDA - IND Hold' ])
+                            .endDateField('enddt')
+                            //.defaultDuration('6') // not sure of units
+                            //.margin({top: 30, right: 20, bottom: 50, left: 50})
+                            //.showControls(true)
+                            //.color(evtcolor)
+                            //.showValues(true)
+                            //.tooltips(false)
+                            //.barColor(d3.scale.category20().range())
+                d3.select('#waterfall-div')
+                    .datum(data)
+                    .transition().duration(500)
+                    .call(chart);
+                nv.utils.windowResize(chart.update);
+                //chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
+                return chart;
+            });
+
+        });
+    });
+    </script>
+</body>
+</html>
