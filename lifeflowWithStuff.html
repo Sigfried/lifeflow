@@ -58,7 +58,7 @@
             .style("z-index", "10")
             .style("visibility", "hidden")
             .text("a simple tooltip");
-        d3.csv('./sampleData/huricane.csv', function (data) {
+        d3.csv('./sampleData/hurricane.csv', function (data) {
             var container = d3.select('body')
                                 .append('div')
                                 ;
@@ -82,8 +82,8 @@
                         'Maximum wind',
                         'Status change'])
                     .unitProp(1000*60*60) // hours
-                    .height($(window).height() - 100)
-                    .width($(window).width() - 100)
+                    .height(window.innerHeight - 100)
+                    .width(window.innerWidth - 100)
                                 ;
             container
                     .datum(data)
