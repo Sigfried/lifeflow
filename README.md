@@ -20,6 +20,6 @@ After cloning, remember to run
     git submodule update
 
 [LifeFlow demo](http://sigfried.org/lifeflow/lifeflowWithStuff.html)
+
 [LifeFlow stripped down demo](http://sigfried.org/lifeflow/hurricaneLifeflowUnadorned.html)
 
-# [Timelines demo](http://sigfried.org/lifeflow/timelines.html) (not currently working)
