@@ -1,0 +1,108 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="en-US" >
+</head>
+<body>
+    <style>
+       .axis {
+            shape-rendering: crispEdges;
+        }
+        .x.axis line {
+            stroke: #ccc;
+        }
+        .x.axis .minor {
+            stroke-opacity: .5;
+        }
+        .x.axis path {
+            display: none;
+        }
+/*
+        .bar {
+            fill: steelblue;
+        }
+*/
+        text {
+            color: black;
+        }
+    </style>
+    <link href="./nv.d3.css" rel="stylesheet" type="text/css">
+    <style>
+        svg { height: auto; }
+    </style>
+
+
+    <script type="text/javascript" src="./d3/d3.js"></script>
+    <script type="text/javascript" src="./underscore/underscore.js"></script>
+    <script type="text/javascript" src="./jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="./enlightened-data/enlightened-data.js"></script>
+    <script type="text/javascript" src="./nvd3/nv.d3.js"></script>
+    <script src="./nvd3/src/tooltip.js"></script>
+    <script src="./nvd3/src/utils.js"></script>
+    <script src="./legend.js"></script>
+    <script src="./nvd3/src/models/axis.js"></script>
+    <script src="./evtData.js"></script>
+    <script src="./timelinesWithStuff.js"></script>
+    <script src="./lifeflowWithStuff.js"></script>
+    <script src="./timelinesChartWithStuff.js"></script>
+
+    <script>
+
+    (function($){
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+        $.getParameterByName = getParameterByName;
+    })(jQuery);
+
+    $(document).ready(function() {
+        d3.csv('./sampleData/hurricane.csv', function (data) {
+
+            if (!$.getParameterByName("fullData")) data = data.slice(2000,2500);
+
+            edata = evtData()
+                    .entityIdProp('hur_id')
+                    .eventNameProp('status')
+                    .startDateProp('date')
+                    .unitProp(1000*60*60) // hours
+            var timelineData = edata.timelines(data);
+
+
+            var container = d3.select('body')
+                                .append('div')
+                                ;
+            var timelinesChart = nv.models.timelinesChart()
+                    .entityIdProp('hur_id')
+                    .eventNameProp('status')
+                    .startDateProp('date')
+                    .eventOrder([
+                        'Subtropical storm',
+                        'Genesis',
+                        'Disturbance',
+                        'Subtropical Depression',
+                        'Tropical Wave',
+                        'Tropical Depression',
+                        'Tropical Storm',
+                        'Hurricane',
+                        'Landfall', 
+                        'Extratropical',
+                        'Low',
+                        'Intensity Peak', 
+                        'Maximum wind',
+                        'Status change'])
+                    .unitProp(1000*60*60) // hours
+                    .height(window.innerHeight - 100)
+                    .width(window.innerWidth - 100)
+            timelinesChart.setEventNames(data);
+            container
+                    .datum(timelineData)
+                    .call(timelinesChart);
+        });
+    });
+    </script>
+</body>
+</html>
