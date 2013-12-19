@@ -290,7 +290,7 @@ nv.models.timelinesChart = function () {
     chart.yAxis = yAxis;
     chart.xAxis = xAxis;
 
-    d3.rebind(chart, tlChart, 'setEventNames', 'clipEdge', 'id', 'delay', 'showValues', 'valueFormat', 'barColor', 'entityIdProp', 'eventNameProp', 'eventOrder', 'startDateProp', 'endDateField', 'defaultDuration', 'color', 'eventNames', 'alignBy', 'xAxis', 'evtData','unitProp');
+    d3.rebind(chart, tlChart, 'setEventNames', 'clipEdge', 'id', 'delay', 'showValues', 'valueFormat', 'barColor', 'entityIdProp', 'eventNameProp', 'eventOrder', 'startDateProp', 'endDateField', 'defaultDuration', 'color', 'eventNames', 'alignBy', 'xAxis', 'evtData','unitProp','launchFunc');
     chart.margin = function (_) {
         if (!arguments.length) return margin;
         margin.top = typeof _.top != 'undefined' ? _.top : margin.top;

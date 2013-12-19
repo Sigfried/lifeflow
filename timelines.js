@@ -42,7 +42,7 @@ var timelineChart = function () {
         , level = true
         , sortFunc
             ;
-    var lifeflow = lifeflowChart();
+    var lifeflow = nv.models.lifeflow();
     var evtLFMap;
     //============================================================
     var domIds = 1;

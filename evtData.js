@@ -1,5 +1,14 @@
+/**
+ * @file Defines the evtData utilities for {@link sequence-viz}
+ * @author Sigfried Gold <sigfried@sigfried.org>
+ * @license http://sigfried.mit-license.org/
+ * Don't trust this documentation yet. It's just beginning to be
+ * written.
+ */
+
 'use strict';
 var evtData = function() {
+    /** @namespace evtData */
     // public
     var   entityIdProp
         , eventNameProp

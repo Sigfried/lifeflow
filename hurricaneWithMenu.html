@@ -78,7 +78,7 @@
                 'Intensity Peak', 
                 'Maximum wind',
                 'Status change'];
-            var filteredOut = [];
+        var filteredOut = enlightenedData.addGroupMethods([]);
 
         d3.csv('./sampleData/hurricane.csv', function (data) {
             var extras = lifeflowExtras();
@@ -121,15 +121,17 @@
                         refresh: true, subs: [] }
                 ]},
                 { label: 'Filter', subs: 
-                    _(eventOrder).map(function(evtName) {
-                        var filterThis = !_(filteredOut).contains(evtName);
-                        return { label: evtName, 
-                            LIprops: {filtered: filterThis},
-                            action: _.partial(filter, filterThis, evtName) }
-                    })
+                    enlightenedData.addGroupMethods(
+                        _(eventOrder).map(function(evtName) {
+                            //var filterThis = filteredOut.contains(evtName);
+                            return { label: evtName, 
+                                LIprops: {filtered: false},
+                                action: _.partial(filter, evtName) }
+                        }))
                 },
                 { label: 'Align by', action: null, subs: [ ] },
                 ];
+            enlightenedData.addGroupMethods(menuData);
 
             extras.menu(d3.select('body'), menuData);
             var container = d3.select('body')
@@ -141,11 +143,13 @@
                 d3.select('svg#main').selectAll('*').remove();
             })
 
-            function filter(filterThis, evtName) {
-                if (filterThis && !_(filteredOut).contains(evtName))
-                    filteredOut.push(evtName);
-                if (!filterThis)
-                    filteredOut = _(filteredOut).without(evtName);
+            function filter(evtName, datum, i, j) {
+                var item = menuData
+                    .findWhere({label:'Filter'})
+                    .subs.findWhere({label:evtName})
+
+                item.LIprops.filtered = !item.LIprops.filtered;
+                extras.menu(d3.select('body'), menuData);
             }
             function showLifeflow() {
                 var chart = lifeflowChart()

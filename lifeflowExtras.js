@@ -18,32 +18,39 @@ var lifeflowExtras = function() {
     var dispatch = exp.dispatch = d3.dispatch('refresh')
 
     exp.menu = function(targetSelection, menuData) {
-        menuRecurse(targetSelection.append('div').attr('id','cssmenu'), 
-                menuData);
+        targetSelection.selectAll('ul').data([1]).enter()
+                    .append('div').attr('id','cssmenu') 
+                    .append('ul');
+        var div = targetSelection.select('div#cssmenu');
+        var topULs = div.selectAll('ul').filter(function() { 
+            return this.parentNode===targetSelection.select('div#cssmenu').node() 
+        })
+        menuRecurse(topULs, menuData);
 
         // fill filter subs
     }
     function menuRecurse(d3Node, menuItems) {
-        var LIs = d3Node.append('ul')
-            .selectAll('li')
-                .data(menuItems).enter()
-                .append('li')
-                    .classed('active', function(d) { return d.active })
-        LIs.append('a').attr('href','#')
+        var newLIs = d3Node.selectAll('li')
+                    .data(menuItems).enter()
+                    .append('li')
+                        .classed('active', function(d) { return d.active })
+        newLIs.append('a').attr('href','#')
             .append('span').text(function(d) { return d.label })
-        LIs.filter(function(d) { return d.action })
+        newLIs.filter(function(d) { return d.action })
             .selectAll('a')
             .on('click',function(d) {
                 if (d.refresh) dispatch.refresh();
-                d.action();
+                d.action.apply(this, arguments)
             })
-        LIs.filter(function(d) { return !d.action })
+        newLIs.filter(function(d) { return !d.action })
             .selectAll('a')
             .style('cursor','default')
-        LIs.each(function(d) {
+        d3Node.selectAll('li').each(function(d) {
             d3.select(this).classed('has-sub', d.subs && d.subs.length);
             if (d.subs && d.subs.length) {
-                menuRecurse(d3.select(this), d.subs);
+                d3.select(this).selectAll('ul')
+                            .data([1]).enter().append('ul')
+                menuRecurse(d3.select(this).select('ul'), d.subs);
             }
             if (d.LIprops)
                 for (var p in d.LIprops) {

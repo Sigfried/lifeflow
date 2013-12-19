@@ -11,12 +11,14 @@ var timelineChart = function () {
             bottom: 0,
             left: 0
         }
-        , edata, entityIdProp = null
+        , edata
+        , entityIdProp = null
         , timelineData
         , eventNameProp = null
         , eventNames = null
         , eventOrder = []
         , alignChoices
+        , launchFunc
         , startDateProp = null
         , unitProp
         , timeUnit
@@ -462,11 +464,18 @@ var timelineChart = function () {
                     })
             chart.dispatch.on('toggleEvt', function (evtName) {
                 evtName.disabled = !evtName.disabled;
-                var recs = _(data).filter(function(d) {
-                    return !eventNames.lookup(d[eventNameProp]).disabled;
-                });
-                timelineData = edata.makeTimelines(recs);
-                chart.setEventNames(recs);
+                var recs = _(
+                    timelineData.pluck('records')
+                    .flatten())
+                    .filter(function(d) {
+                        return !eventNames.lookup(d[eventNameProp]).disabled;
+                    });
+                timelineData = edata.timelines(recs);
+                container
+                        .datum(timelineData)
+                        .call(chart);
+                //launchFunc(recs);
+                //chart.setEventNames(recs);
                 /*
                 edata = e.toggleReturnNew();
                 setEventNames();
@@ -700,6 +709,11 @@ var timelineChart = function () {
     chart.timelineData = function (_) {
         if (!arguments.length) return timelineData;
         timelineData = _;
+        return chart;
+    };
+    chart.launchFunc = function (_) {
+        if (!arguments.length) return launchFunc;
+        launchFunc = _;
         return chart;
     };
     chart.unitProp = function(_) {

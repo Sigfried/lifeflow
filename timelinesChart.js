@@ -4,7 +4,7 @@ nv.models.timelinesChart = function () {
     //============================================================
     // Public Variables with Default Settings
     //------------------------------------------------------------
-    var timelines = nv.models.timelines(),
+    var timelines = timelineChart(),
         xAxis = nv.models.axis(),
         yAxis = nv.models.axis(),
         tip = nv.models.tooltip().gravity('w').distance(23),
@@ -30,8 +30,6 @@ nv.models.timelinesChart = function () {
         , width = null
         , height = null
         , edata
-        , timelines // CONFUSING! timelines here refers to timelines.js
-                    // not to edata.timelines()
         , lifeflowNodes
         , entities
         , showLegend = true
@@ -101,9 +99,9 @@ nv.models.timelinesChart = function () {
             } else {
                 container.selectAll('.nv-noData').remove();
             }
-            timelines.xScale(d3.scale.linear().range([0, chartGraphWidth]));
-            timelines.yScaleLinear(d3.scale.linear().range([0, chartGraphHeight]))
-            timelines.yScaleOrdinal(d3.scale.ordinal().rangeBands([0, chartGraphHeight]))
+            tlChart.xScale(d3.scale.linear().range([0, chartGraphWidth]));
+            tlChart.yScaleLinear(d3.scale.linear().range([0, chartGraphHeight]))
+            tlChart.yScaleOrdinal(d3.scale.ordinal().rangeBands([0, chartGraphHeight]))
 
             // Setup containers and skeleton of chart
             container.selectAll('svg.svg-head')
@@ -154,7 +152,7 @@ nv.models.timelinesChart = function () {
 
 
             hideLegend.dispatch.on('legendClick', function (e, i) {
-                timelines.dispatch.toggleEvt(e,i);
+                tlChart.dispatch.toggleEvt(e,i);
                 chart.update();
             });
 
@@ -173,7 +171,7 @@ nv.models.timelinesChart = function () {
             */
             alignLegend.dispatch.on('legendClick', function (d, i) {
                 if (!!d.disabled) {
-                    timelines.alignChoices().forEach(function (d) {
+                    tlChart.alignChoices().forEach(function (d) {
                         d.disabled = true;
                     });
                     chart.alignBy(d.valueOf());
@@ -181,8 +179,8 @@ nv.models.timelinesChart = function () {
                 } else {
                     d.disabled = true;
                     // default is align by start
-                    timelines.alignChoices()[0].disabled = false;
-                    chart.alignBy(timelines.alignChoices()[0].valueOf());
+                    tlChart.alignChoices()[0].disabled = false;
+                    chart.alignBy(tlChart.alignChoices()[0].valueOf());
                 }
                 chart.update();
             });
@@ -192,7 +190,7 @@ nv.models.timelinesChart = function () {
             // Main Chart Component(s)
 
 
-            timelines 
+            tlChart 
                 //.disabled(data.map(function (series) { return series.disabled })) // commented out with no apparent effect
                 .width(chartGraphWidth)
                 .height(chartGraphHeight)
@@ -200,18 +198,18 @@ nv.models.timelinesChart = function () {
             svgChart.select('g.nv-evt-chart')
                     .datum(data)
                     //.transition()
-                    .call(timelines);
+                    .call(tlChart);
 
-            hideLegend.color(timelines.color());
-            alignLegend.color(timelines.color());
+            hideLegend.color(tlChart.color());
+            alignLegend.color(tlChart.color());
             hideLegend.width(chartFullWidth);
             alignLegend.width(chartFullWidth);
 
             svgHead.selectAll('g.hide-legend')
-                .data([timelines.eventNames()])
+                .data([tlChart.eventNames()])
                 .call(hideLegend);
             svgHead.select('g.align-legend')
-                .data([timelines.alignChoices()])
+                .data([tlChart.alignChoices()])
                 .call(alignLegend);
             yAxis
                 .orient('left')
@@ -233,7 +231,7 @@ nv.models.timelinesChart = function () {
             }
 
             if (!HIDE_Y_AXIS) {
-                yAxis.scale(timelines.yScaleOrdinal())
+                yAxis.scale(tlChart.yScaleOrdinal())
                     .ticks(chartGraphHeight / 24)
                     .tickSize(-chartFullWidth, 0);
                 d3.transition()
@@ -248,7 +246,7 @@ nv.models.timelinesChart = function () {
                     .style('opacity', 1)
             }
 
-            xAxis.scale(timelines.xScale())
+            xAxis.scale(tlChart.xScale())
                 .ticks(chartGraphWidth / 55)
                 .tickSize(-chartGraphHeight, 0)
 
@@ -272,11 +270,11 @@ nv.models.timelinesChart = function () {
     // Event Handling/Dispatching (out of chart's scope)
     //------------------------------------------------------------
 
-    timelines.dispatch.on('elementMouseover.tooltip', function(e) {
+    tlChart.dispatch.on('elementMouseover.tooltip', function(e) {
         //e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
         dispatch.tooltipShow(e);
     });
-    timelines.dispatch.on('elementMouseout.tooltip', function(e) {
+    tlChart.dispatch.on('elementMouseout.tooltip', function(e) {
         dispatch.tooltipHide(e);
     });
     dispatch.on('tooltipHide', function() {
@@ -287,12 +285,12 @@ nv.models.timelinesChart = function () {
     //------------------------------------------------------------
     // expose chart's sub-components
     chart.dispatch = dispatch;
-    chart.timelines = timelines;
+    //chart.timelines = timelines;
     //chart.legend = legend;
     chart.yAxis = yAxis;
     chart.xAxis = xAxis;
 
-    d3.rebind(chart, timelines, 'clipEdge', 'id', 'delay', 'showValues', 'valueFormat', 'barColor', 'entityIdProp', 'eventNameProp', 'eventOrder', 'startDateProp', 'endDateField', 'defaultDuration', 'color', 'eventNames', 'alignBy', 'xAxis', 'evtData','unitProp');
+    d3.rebind(chart, /*timelines, */ 'clipEdge', 'id', 'delay', 'showValues', 'valueFormat', 'barColor', 'entityIdProp', 'eventNameProp', 'eventOrder', 'startDateProp', 'endDateField', 'defaultDuration', 'color', 'eventNames', 'alignBy', 'xAxis', 'evtData','unitProp');
     chart.margin = function (_) {
         if (!arguments.length) return margin;
         margin.top = typeof _.top != 'undefined' ? _.top : margin.top;

@@ -13,12 +13,6 @@
   margin: 0;
   padding: 0;
 }
-#cssmenu ul li[filtered=true]: {
-    opacity: 0.5;
-}
-#cssmenu ul li[filtered=false]: {
-    opacity: 1;
-}
 #cssmenu ul {
   position: relative;
   z-index: 597;
@@ -205,4 +199,10 @@
 }
 #cssmenu .has-sub .has-sub ul a:hover {
   background: #bfbfbf;
+}
+#cssmenu ul li[filtered=true] {
+    opacity: 0.5;
+}
+#cssmenu ul li[filtered=false] {
+    opacity: 1;
 }

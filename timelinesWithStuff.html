@@ -59,48 +59,61 @@
         $.getParameterByName = getParameterByName;
     })(jQuery);
 
+    function launch(data) {
+        edata = evtData()
+                .entityIdProp('hur_id')
+                .eventNameProp('status')
+                .startDateProp('date')
+                .unitProp(1000*60*60) // hours
+        var timelineData = edata.timelines(data);
+
+
+        var container = d3.select('body')
+                            .append('div')
+                            ;
+        var timelinesChart = nv.models.timelinesChart()
+                .entityIdProp('hur_id')
+                .eventNameProp('status')
+                .startDateProp('date')
+                .eventOrder([
+                    'Subtropical storm',
+                    'Genesis',
+                    'Disturbance',
+                    'Subtropical Depression',
+                    'Tropical Wave',
+                    'Tropical Depression',
+                    'Tropical Storm',
+                    'Hurricane',
+                    'Landfall', 
+                    'Extratropical',
+                    'Low',
+                    'Intensity Peak', 
+                    'Maximum wind',
+                    'Status change'])
+                .unitProp(1000*60*60) // hours
+                .height(window.innerHeight - 100)
+                .width(window.innerWidth - 100)
+                .evtData(edata)
+                //.launchFunc(launch)
+        timelinesChart.setEventNames(data);
+        container
+                .datum(timelineData)
+                .call(timelinesChart);
+    }
     $(document).ready(function() {
         d3.csv('./sampleData/hurricane.csv', function (data) {
 
-            if (!$.getParameterByName("fullData")) data = data.slice(2000,2500);
+            if (!$.getParameterByName("fullData")) 
+                _(data).each(function(d) { 
+                    d.date = "2000"+d.date.slice(4) })
+                data = data.filter(function(d) { 
+                    return d.hur_id !== 'AL312005_ZETA_36' });
+                data = data.filter(function(d) { 
+                    return d.date.substr(5, 2) > '08' });
+                data = data.filter(function(d) { 
+                    return d.date.substr(5, 2) < '10' });
 
-            edata = evtData()
-                    .entityIdProp('hur_id')
-                    .eventNameProp('status')
-                    .startDateProp('date')
-                    .unitProp(1000*60*60) // hours
-            var timelineData = edata.timelines(data);
-
-
-            var container = d3.select('body')
-                                .append('div')
-                                ;
-            var timelinesChart = nv.models.timelinesChart()
-                    .entityIdProp('hur_id')
-                    .eventNameProp('status')
-                    .startDateProp('date')
-                    .eventOrder([
-                        'Subtropical storm',
-                        'Genesis',
-                        'Disturbance',
-                        'Subtropical Depression',
-                        'Tropical Wave',
-                        'Tropical Depression',
-                        'Tropical Storm',
-                        'Hurricane',
-                        'Landfall', 
-                        'Extratropical',
-                        'Low',
-                        'Intensity Peak', 
-                        'Maximum wind',
-                        'Status change'])
-                    .unitProp(1000*60*60) // hours
-                    .height(window.innerHeight - 100)
-                    .width(window.innerWidth - 100)
-            timelinesChart.setEventNames(data);
-            container
-                    .datum(timelineData)
-                    .call(timelinesChart);
+            launch(data);
         });
     });
     </script>

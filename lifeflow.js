@@ -1,5 +1,13 @@
+/**
+ * @file Defines the lifeflow chart for {@link sequence-viz}
+ * @author Sigfried Gold <sigfried@sigfried.org>
+ * @license http://sigfried.mit-license.org/
+ * Don't trust this documentation yet. It's just beginning to be
+ * written.
+ */
 'use strict';
 var lifeflowChart = function () {
+    /** @namespace lifeflowChart */
 
     //============================================================
     // Public Variables with Default Settings
