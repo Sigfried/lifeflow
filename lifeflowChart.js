@@ -112,7 +112,7 @@ nv.models.lifeflowChart = function () {
                 .data(['stub']).enter()
                 .append('svg').attr('class', 'svg-head')
                     //.attr('width', availableWidth)
-                .attr('height', legendHeight * 3)
+                .attr('height', legendHeight * 7)
             var svgHead = container.select('svg.svg-head');
 
             var svgChart = container.selectAll('svg.svg-chart').data(['stub'])
